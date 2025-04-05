@@ -1,3 +1,12 @@
+require("dotenv").config();
+
+// Connect Server to MongoDB
+const config = require("./config.json");
+const mongoose = require('mongoose');
+
+mongoose.connect(config.connectionString)
+
+
 // Import required modules
 const express = require('express');
 const cors = require('cors');
