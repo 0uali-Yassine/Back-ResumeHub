@@ -4,8 +4,9 @@ require("dotenv").config();
 const config = require("./config.json");
 const mongoose = require('mongoose');
 
-// !!
+// Import models
 const userModel = require("./models/user.model");
+const resumeModel = require("./models/resume.model");
 
 mongoose.connect(config.connectionString)
     .then(() => console.log("MongoDB connected..."))
@@ -123,31 +124,66 @@ app.post("/create-account", async (req, res) => {
 
 // login user
 
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
+app.post("/add-resume", authenticateToken, async (req, res) => {
+    try {
+        const { fullName, img, description, experience, education, skills } = req.body;
+        const userId = req.user.id; // Get userId from the token
+
+        if (!fullName || !description) {
+            return res.status(400).json({ error: true, message: "All fields are required" });
+        }
+
+        const resume = new resumeModel({
+            fullName,
+            img,
+            description,
+            experience,
+            education,
+            skills,
+            userId,
+        });
+
+        await resume.save();
+        return res.status(201).json({
+            error: false,
+            message: "Resume created successfully",
+        });
+    } catch (error) {
+        console.error("Error adding resume:", error);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while adding the resume",
+            errorDetails: error.message,
+        });
+    }
+});
+
+
+// add resume
+app.post("/add-resume", authenticateToken, async (req, res) => {
+    const { fullName, img, description, experience, education, skills } = req.body;
+    const userId = req.user.id; // Get userId from the token
+
+    if (!fullName || !description) {
         return res.status(400).json({ error: true, message: "All fields are required" });
     }
 
-    const user = await userModel.findOne({ email });
-    if (!user) {
-        return res.status(400).json({ error: true, message: "The user not Exist!" });
-    }
+    const resume = new resumeModel({
+        fullName,
+        img,
+        description,
+        experience,
+        education,
+        skills,
+        userId,
+    });
 
-    if (user.password !== password) {
-        return res.status(400).json({ error: true, message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-    return res.status(200).json({
+    await resume.save();
+    return res.status(201).json({
         error: false,
-        user,
-        token,
-        message: "Login successful",
+        message: "Resume created successfully",
     });
 });
-
-// add resume
 
 
 app.listen(8000);
