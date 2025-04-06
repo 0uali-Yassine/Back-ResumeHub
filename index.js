@@ -1,4 +1,6 @@
 require("dotenv").config();
+console.log("Access Token Secret:", process.env.ACCESS_TOKEN_SECRET);
+
 
 // Connect Server to MongoDB
 const config = require("./config.json");
@@ -20,7 +22,7 @@ const app = express();
 
 // !!
 const jwt = require('jsonwebtoken');
-const { authenticateToken } = require("./utilities");
+const  authenticateToken  = require("./utilities.js");
 
 
 // Middleware
@@ -124,6 +126,30 @@ app.post("/create-account", async (req, res) => {
 
 // login user
 
+app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: true, message: "All fields are required" });
+    }
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+        return res.status(400).json({ error: true, message: "The user not Exist!" });
+    }
+
+    if (user.password !== password) {
+        return res.status(400).json({ error: true, message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    return res.status(200).json({
+        error: false,
+        user,
+        token,
+        message: "Login successful",
+    });
+});
+
 app.post("/add-resume", authenticateToken, async (req, res) => {
     try {
         const { fullName, img, description, experience, education, skills } = req.body;
@@ -156,33 +182,6 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
             errorDetails: error.message,
         });
     }
-});
-
-
-// add resume
-app.post("/add-resume", authenticateToken, async (req, res) => {
-    const { fullName, img, description, experience, education, skills } = req.body;
-    const userId = req.user.id; // Get userId from the token
-
-    if (!fullName || !description) {
-        return res.status(400).json({ error: true, message: "All fields are required" });
-    }
-
-    const resume = new resumeModel({
-        fullName,
-        img,
-        description,
-        experience,
-        education,
-        skills,
-        userId,
-    });
-
-    await resume.save();
-    return res.status(201).json({
-        error: false,
-        message: "Resume created successfully",
-    });
 });
 
 
