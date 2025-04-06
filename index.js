@@ -125,7 +125,6 @@ app.post("/create-account", async (req, res) => {
 
 
 // login user
-
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -150,6 +149,7 @@ app.post("/login", async (req, res) => {
     });
 });
 
+// add resume
 app.post("/add-resume", authenticateToken, async (req, res) => {
     try {
         const { fullName, img, description, experience, education, skills } = req.body;
@@ -183,6 +183,49 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
         });
     }
 });
+
+// edit resume
+app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
+    try {
+        const { resumeId } = req.params;
+        const { fullName, img, description, experience, education, skills } = req.body;
+
+        if (!fullName || !description) {
+            return res.status(400).json({ error: true, message: "All fields are required" });
+        }
+
+        const resume = await resumeModel.findOneAndUpdate(
+            { _id: resumeId, userId: req.user.id },  
+            {
+              fullName,
+              img,
+              description,
+              experience,
+              education,
+              skills,
+            },
+            { new: true } // for u yassine "means" to return the updated document not the old one!  
+          );    
+
+        if (!resume) {
+            return res.status(404).json({ error: true, message: "Resume not found" });
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: "Resume updated successfully",
+            resume,
+        });
+    } catch (error) {
+        console.error("Error updating resume:", error);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while updating the resume",
+            errorDetails: error.message,
+        });
+    }
+});
+
 
 
 app.listen(8000);
