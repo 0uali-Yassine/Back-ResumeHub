@@ -22,7 +22,7 @@ const app = express();
 
 // !!
 const jwt = require('jsonwebtoken');
-const  authenticateToken  = require("./utilities.js");
+const authenticateToken = require("./utilities.js");
 
 
 // Middleware
@@ -39,7 +39,7 @@ app.use(
 app.get("/", (req, res) => {
     res.json({ data: "Server is running on port 8000" });
 });
- 
+
 // craete a new user
 // app.post("/create-account", async (req, res) => {
 //     const { fullName, email, password } = req.body;
@@ -88,10 +88,10 @@ app.get("/", (req, res) => {
 app.post("/create-account", async (req, res) => {
     try {
         const { fullName, email, password } = req.body;
- 
+
         // Log the request body to see what is  sent
-        console.log("Request body:", req.body); 
-        console.log("Full Name:", fullName);    
+        console.log("Request body:", req.body);
+        console.log("Full Name:", fullName);
         console.log(req.body);
 
         if (!fullName || !email || !password) {
@@ -104,7 +104,7 @@ app.post("/create-account", async (req, res) => {
         }
 
 
-        const user = new userModel({ fullName, email, password});
+        const user = new userModel({ fullName, email, password });
         await user.save();
 
         // Generate JWT token
@@ -204,21 +204,14 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
             skills,
         };
 
-        // If the logged-in user is a manager, allow them to update any resume.
-        // Otherwise, restrict the update to resumes that belong to the user.
-        
-        // const filter = req.user.role === 'manager'
-        //     ? { _id: resumeId }
-        //     : { _id: resumeId, userId: req.user.id };
-
-            let filter;
-            if (req.user.role === 'manager') {
-                // managers delete any resume
-                filter = { _id: resumeId };
-            } else {
-                // employer only delete their  resume
-                filter = { _id: resumeId, userId: req.user.id };
-            }
+        let filter;
+        if (req.user.role === 'manager') {
+            // manager edite any resume
+            filter = { _id: resumeId };
+        } else {
+            // employer only edite their  resume
+            filter = { _id: resumeId, userId: req.user.id };
+        }
 
         const resume = await resumeModel.findOneAndUpdate(filter, updateData, { new: true });
 
@@ -284,7 +277,7 @@ app.delete("/delete-resume/:resumeId", authenticateToken, async (req, res) => {
     try {
         const { resumeId } = req.params;
 
-        
+
         let filter;
         if (req.user.role === 'manager') {
             // managers delete any resume
