@@ -184,7 +184,7 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
     }
 });
 
-// edit resume
+// edit resume based on user role if manager= can edite every / employer = can edite only thier resume
 app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
     try {
         const { resumeId } = req.params;
@@ -194,18 +194,33 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
             return res.status(400).json({ error: true, message: "All fields are required" });
         }
 
-        const resume = await resumeModel.findOneAndUpdate(
-            { _id: resumeId, userId: req.user.id },  
-            {
-              fullName,
-              img,
-              description,
-              experience,
-              education,
-              skills,
-            },
-            { new: true } // for u yassine "means" to return the updated document not the old one!  
-          );    
+        // Build the update data object
+        const updateData = {
+            fullName,
+            img,
+            description,
+            experience,
+            education,
+            skills,
+        };
+
+        // If the logged-in user is a manager, allow them to update any resume.
+        // Otherwise, restrict the update to resumes that belong to the user.
+        
+        // const filter = req.user.role === 'manager'
+        //     ? { _id: resumeId }
+        //     : { _id: resumeId, userId: req.user.id };
+
+            let filter;
+            if (req.user.role === 'manager') {
+                // managers delete any resume
+                filter = { _id: resumeId };
+            } else {
+                // employer only delete their  resume
+                filter = { _id: resumeId, userId: req.user.id };
+            }
+
+        const resume = await resumeModel.findOneAndUpdate(filter, updateData, { new: true });
 
         if (!resume) {
             return res.status(404).json({ error: true, message: "Resume not found" });
@@ -225,6 +240,81 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
         });
     }
 });
+
+
+// get  resume
+app.get("/get-resumes", authenticateToken, async (req, res) => {
+    try {
+        const resumes = await resumeModel.find({ userId: req.user.id }); // Get resumes for the authenticated user
+        return res.status(200).json({
+            error: false,
+            resumes,
+        });
+    } catch (error) {
+        console.error("Error fetching resumes:", error);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while fetching resumes",
+            errorDetails: error.message,
+        });
+    }
+});
+
+// get all resumes == public route
+app.get("/get-all-resumes", authenticateToken, async (req, res) => {
+    try {
+        // Fetch all resumes without filtering by userId
+        const resumes = await resumeModel.find();
+        return res.status(200).json({
+            error: false,
+            resumes,
+        });
+    } catch (error) {
+        console.error("Error fetching resumes:", error);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while fetching resumes",
+            errorDetails: error.message,
+        });
+    }
+});
+
+// delete resume based on user role if manager = can delete every / employer = can delete only thier resume
+app.delete("/delete-resume/:resumeId", authenticateToken, async (req, res) => {
+    try {
+        const { resumeId } = req.params;
+
+        
+        let filter;
+        if (req.user.role === 'manager') {
+            // managers delete any resume
+            filter = { _id: resumeId };
+        } else {
+            // employer only delete their  resume
+            filter = { _id: resumeId, userId: req.user.id };
+        }
+
+        const resume = await resumeModel.findOneAndDelete(filter);
+
+        if (!resume) {
+            return res.status(404).json({ error: true, message: "Resume not found" });
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: "Resume deleted successfully",
+        });
+    } catch (error) {
+        console.error("Error deleting resume:", error);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while deleting the resume",
+            errorDetails: error.message,
+        });
+    }
+});
+
+
 
 
 
