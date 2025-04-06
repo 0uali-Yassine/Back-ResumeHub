@@ -149,11 +149,18 @@ app.post("/login", async (req, res) => {
     });
 });
 
-// add resume
+// add resume based on user role if manager = can't add resume / employer = can add  resume for himself
 app.post("/add-resume", authenticateToken, async (req, res) => {
     try {
+        // Get the logged-in user's details from the database
+        const user = await userModel.findById(req.user.id);
+        // Only allow employers to add resumes
+        if (user.role !== 'employer') {
+            return res.status(403).json({ error: true, message: "Only employers can add resumes." });
+        }
+        
         const { fullName, img, description, experience, education, skills } = req.body;
-        const userId = req.user.id; // Get userId from the token
+        const userId = req.user.id; // From the token
 
         if (!fullName || !description) {
             return res.status(400).json({ error: true, message: "All fields are required" });
@@ -173,6 +180,7 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
         return res.status(201).json({
             error: false,
             message: "Resume created successfully",
+            resume,
         });
     } catch (error) {
         console.error("Error adding resume:", error);
@@ -238,7 +246,7 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
 // get  resume
 app.get("/get-resumes", authenticateToken, async (req, res) => {
     try {
-        const resumes = await resumeModel.find({ userId: req.user.id }); // Get resumes for the authenticated user
+        const resumes = await resumeModel.find({ userId: req.user.id }); // Get resumes for the  user
         return res.status(200).json({
             error: false,
             resumes,
