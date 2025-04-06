@@ -34,57 +34,17 @@ app.use(
     })
 );
 
+
+
+// backend ready!!
 // Routes
 
 app.get("/", (req, res) => {
     res.json({ data: "Server is running on port 8000" });
 });
 
-// craete a new user
-// app.post("/create-account", async (req, res) => {
-//     const { fullName, email, password } = req.body;
-//     if (!fullName || !email || !password) {
-//         return res.status(400).json({ error: true, message: "All fields are required" });
-//     }
 
-//     const isUserExist = await userModel.findOne({ email });
-
-//     if (isUserExist) {
-//         return res.status(400).json({ error: true, message: "User already exists" });
-//     }
-//     //will automatically assign 'employer' as the role
-
-//     // role must be in form to know ho is the manager
-//     // role: {
-//     //     type: String,
-//     //     enum: ['manager', 'employer'], 
-//     //     default: 'employer'            
-//     // }, 
-//     // ({ fullName, email, password,role })
-//     const user = new userModel({ fullName, email, password });
-//     await user.save();
-//     const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-//     return res.status(201).json({
-//         error: false,
-//         user: {
-//             id: user._id,
-//             fullName: user.fullName,
-//             email: user.email,
-//         },
-//         token,
-//         message: "User created successfully",
-//     });
-
-//     // try {
-//     //     const { fullName, email, password } = req.body;
-//     //     const User = require("./models/user.model");
-//     //     const user = new User({ fullName, email, password });
-//     //     await user.save();
-//     //     res.status(201).json({ message: "User created successfully" });
-//     // } catch (error) {
-//     //     res.status(500).json({ error: error.message });
-//     // }
-// });
+// create a new user
 app.post("/create-account", async (req, res) => {
     try {
         const { fullName, email, password } = req.body;
@@ -123,7 +83,6 @@ app.post("/create-account", async (req, res) => {
     }
 });
 
-
 // login user
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -160,7 +119,7 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
         }
         
         const { fullName, img, description, experience, education, skills } = req.body;
-        const userId = req.user.id; // From the token
+        const userId = req.user.id; 
 
         if (!fullName || !description) {
             return res.status(400).json({ error: true, message: "All fields are required" });
@@ -315,7 +274,26 @@ app.delete("/delete-resume/:resumeId", authenticateToken, async (req, res) => {
     }
 });
 
-
+// get user
+app.get("/get-user", authenticateToken, async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ error: true, message: "User not found" });
+        }
+        return res.status(200).json({
+            error: false,
+            user,
+        });
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while fetching the user",
+            errorDetails: error.message,
+        });
+    }
+});
 
 
 
