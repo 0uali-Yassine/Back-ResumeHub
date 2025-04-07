@@ -179,7 +179,6 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
             skills,
         };
 
-        let filter;
         let resume;
 
         if (req.user.role !== 'manager') {
@@ -211,7 +210,7 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
 });
 
 
-// get  resume
+// get  resume !!!
 app.get("/get-resumes", authenticateToken, async (req, res) => {
     try {
         const resumes = await resumeModel.find({ userId: req.user.id }); // Get resumes for the  user
