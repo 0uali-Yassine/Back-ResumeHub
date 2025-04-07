@@ -101,7 +101,7 @@ app.post("/login", async (req, res) => {
         return res.status(400).json({ error: true, message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
     res.cookie("token", token, {
         httpOnly: true,
         secure: true,
@@ -180,19 +180,20 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
         };
 
         let filter;
-        if (req.user.role === 'manager') {
+        let resume;
+
+        if (req.user.role !== 'manager') {
             // manager edite any resume
-            filter = { _id: resumeId };
-        } else {
-            // employer only edite their  resume
-            filter = { _id: resumeId, userId: req.user.id };
-        }
+            isUserResumeExist = await resumeModel.exists(
+                { _id: resumeId, userId: req.user.id },
+            );
+            if (!isUserResumeExist) {
+                return res.status(403).json({ error: true, message: "You can't edite this resume!" });
+            }
+        } 
 
-        const resume = await resumeModel.findOneAndUpdate(filter, updateData, { new: true });
+        resume = await resumeModel.findByIdAndUpdate(resumeId,{ $set: updateData}, { new: true });
 
-        if (!resume) {
-            return res.status(404).json({ error: true, message: "You can't edite this resume!" });
-        }
 
         return res.status(200).json({
             error: false,
