@@ -47,7 +47,7 @@ app.get("/", (req, res) => {
 // create a new user
 app.post("/create-account", async (req, res) => {
     try {
-        const { fullName, email, password,role } = req.body;
+        const { fullName, email, password, role } = req.body;
 
 
         if (!fullName || !email || !password) {
@@ -60,11 +60,17 @@ app.post("/create-account", async (req, res) => {
         }
 
 
-        const user = new userModel({ fullName, email, password,role });
+        const user = new userModel({ fullName, email, password, role });
         await user.save();
 
         // Generate JWT token
         const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+        
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
+        });
 
         return res.status(201).json({
             error: false,
@@ -96,6 +102,12 @@ app.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "Strict",
+    });
+
     return res.status(200).json({
         error: false,
         user,
@@ -113,9 +125,9 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
         if (user.role !== 'employer') {
             return res.status(403).json({ error: true, message: "Only employers can add resumes." });
         }
-        
+
         const { fullName, img, description, experience, education, skills } = req.body;
-        const userId = req.user.id; 
+        const userId = req.user.id;
 
         if (!fullName || !description) {
             return res.status(400).json({ error: true, message: "All fields are required" });
@@ -179,7 +191,7 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
         const resume = await resumeModel.findOneAndUpdate(filter, updateData, { new: true });
 
         if (!resume) {
-            return res.status(404).json({ error: true, message: "Resume not found" });
+            return res.status(404).json({ error: true, message: "You can't edite this resume!" });
         }
 
         return res.status(200).json({
