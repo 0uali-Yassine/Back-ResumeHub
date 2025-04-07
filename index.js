@@ -221,9 +221,11 @@ app.get("/get-all-resumes", authenticateToken, async (req, res) => {
     try {
         // Fetch all resumes without filtering by userId
         const resumes = await resumeModel.find();
+        const currentUserId = req.user.id; // get the current user's ID
         return res.status(200).json({
             error: false,
             resumes,
+            currentUserId,
         });
     } catch (error) {
         console.error("Error fetching resumes:", error);
