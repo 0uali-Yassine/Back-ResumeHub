@@ -47,12 +47,8 @@ app.get("/", (req, res) => {
 // create a new user
 app.post("/create-account", async (req, res) => {
     try {
-        const { fullName, email, password } = req.body;
+        const { fullName, email, password,role } = req.body;
 
-        // Log the request body to see what is  sent
-        console.log("Request body:", req.body);
-        console.log("Full Name:", fullName);
-        console.log(req.body);
 
         if (!fullName || !email || !password) {
             return res.status(400).json({ error: true, message: "All fields are required" });
@@ -64,7 +60,7 @@ app.post("/create-account", async (req, res) => {
         }
 
 
-        const user = new userModel({ fullName, email, password });
+        const user = new userModel({ fullName, email, password,role });
         await user.save();
 
         // Generate JWT token
@@ -295,6 +291,23 @@ app.get("/get-user", authenticateToken, async (req, res) => {
     }
 });
 
+// logout user
+app.get("/logout", authenticateToken, async (req, res) => {
+    try {
+        // Invalidate the token by simply not sending it back to the client
+        return res.status(200).json({
+            error: false,
+            message: "Logout successful",
+        });
+    } catch (error) {
+        console.error("Error logging out:", error);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while logging out",
+            errorDetails: error.message,
+        });
+    }
+});
 
 
 app.listen(8000);
