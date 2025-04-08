@@ -1,0 +1,25 @@
+{
+    "version": 2,
+    "regions": ["iad1"],
+    "builds": [
+      {
+        "src": "index.js",
+        "use": "@vercel/node",
+        "config": {
+          "maxLambdaTimeout": 30,
+          "includeFiles": ["models/**","utilities/**"]
+        }
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "index.js",
+        "methods": ["GET", "POST", "PUT", "DELETE"]
+      },
+      {
+        "src": "/(.*)",
+        "dest": "index.js"
+      }
+    ]
+  }
