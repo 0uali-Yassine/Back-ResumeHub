@@ -23,6 +23,7 @@ const app = express();
 // !!
 const jwt = require('jsonwebtoken');
 const authenticateToken = require("./utilities.js");
+const upload = require("./uploqd.js");
 
 
 // Middleware
@@ -117,7 +118,7 @@ app.post("/login", async (req, res) => {
 });
 
 // add resume based on user role if manager = can't add resume / employer = can add  resume for himself
-app.post("/add-resume", authenticateToken, async (req, res) => {
+app.post("/add-resume", upload.single("img"), authenticateToken, async (req, res) => {
     try {
         // Get the logged-in user's details from the database
         const user = await userModel.findById(req.user.id);
