@@ -46,45 +46,100 @@ app.get("/", (req, res) => {
 
 
 // create a new user
-app.post("/create-account", async (req, res) => {
-    try {
-        const { fullName, email, password, role } = req.body;
+// app.post("/create-account", async (req, res) => {
+//     try {
+//         const { fullName, email, password, role } = req.body;
 
 
-        if (!fullName || !email || !password) {
-            return res.status(400).json({ error: true, message: "All fields are required" });
-        }
+//         if (!fullName || !email || !password) {
+//             return res.status(400).json({ error: true, message: "All fields are required" });
+//         }
 
-        const isUserExist = await userModel.findOne({ email });
-        if (isUserExist) {
-            return res.status(400).json({ error: true, message: "User already exists" });
-        }
+//         const isUserExist = await userModel.findOne({ email });
+//         if (isUserExist) {
+//             return res.status(400).json({ error: true, message: "User already exists" });
+//         }
 
 
-        const user = new userModel({ fullName, email, password, role });
-        await user.save();
+//         const user = new userModel({ fullName, email, password, role });
+//         await user.save();
 
-        // Generate JWT token
-        const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+//         // Generate JWT token
+//         const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
         
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "Strict",
-        });
+//         res.cookie("token", token, {
+//             httpOnly: true,
+//             secure: true,
+//             sameSite: "Strict",
+//         });
 
-        return res.status(201).json({
-            error: false,
-            user,
-            token,
-            message: "User created successfully",
-        });
+//         return res.status(201).json({
+//             error: false,
+//             user,
+//             token,
+//             message: "User created successfully",
+//         });
 
-    } catch (error) {
-        console.error("Error creating user:", error); // Log the error
-        return res.status(500).json({ error: true, message: "An error occurred while creating the user" });
-    }
-});
+//     } catch (error) {
+//         console.error("Error creating user:", error); // Log the error
+//         return res.status(500).json({ error: true, message: "An error occurred while creating the user" });
+//     }
+// });
+// app.post("/add-resume", upload.single("image"), authenticateToken, async (req, res) => {
+//     try {
+//         const user = await userModel.findById(req.user.id);
+
+//         // Only allow employers to add resumes
+//         if (user.role !== 'employer') {
+//             return res.status(403).json({ error: true, message: "Only employers can add resumes." });
+//         }
+
+//         const { fullName, description } = req.body;
+
+//         if (!fullName || !description) {
+//             return res.status(400).json({ error: true, message: "Full name and description are required." });
+//         }
+
+//         // Parse JSON fields
+//         let experience = [], education = [], skills = [];
+//         try {
+//             experience = JSON.parse(req.body.experience || "[]");
+//             education = JSON.parse(req.body.education || "[]");
+//             skills = JSON.parse(req.body.skills || "[]");
+//         } catch (jsonErr) {
+//             return res.status(400).json({ error: true, message: "Invalid JSON in experience, education, or skills." });
+//         }
+
+//         // Image from Cloudinary
+//         const img = req.file?.path;
+
+//         const resume = new resumeModel({
+//             fullName,
+//             img,
+//             description,
+//             experience,
+//             education,
+//             skills,
+//             userId: req.user.id,
+//         });
+
+//         await resume.save();
+
+//         return res.status(201).json({
+//             error: false,
+//             message: "Resume created successfully",
+//             resume,
+//         });
+//     } catch (error) {
+//         console.error("Error adding resume:", error);
+//         return res.status(500).json({
+//             error: true,
+//             message: "An error occurred while adding the resume",
+//             errorDetails: error.message,
+//         });
+//     }
+// });
+
 
 // login user
 app.post("/login", async (req, res) => {
@@ -161,10 +216,11 @@ app.post("/add-resume", upload.single("img"), authenticateToken, async (req, res
 });
 
 // edit resume based on user role if manager= can edite every / employer = can edite only thier resume
-app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
+app.put("/edit-resume/:resumeId",upload.single("img"), authenticateToken, async (req, res) => {
     try {
         const { resumeId } = req.params;
         const { fullName, img, description, experience, education, skills } = req.body;
+        
 
         if (!fullName || !description) {
             return res.status(400).json({ error: true, message: "All fields are required" });
@@ -209,6 +265,69 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
         });
     }
 });
+// app.put("/edit-resume/:resumeId", upload.single("image"), authenticateToken, async (req, res) => {
+//     try {
+//         const { resumeId } = req.params;
+//         const { fullName, description } = req.body;
+
+//         if (!fullName || !description) {
+//             return res.status(400).json({ error: true, message: "Full name and description are required." });
+//         }
+
+//         // Parse JSON fields safely
+//         let experience = [], education = [], skills = [];
+//         try {
+//             experience = JSON.parse(req.body.experience || "[]");
+//             education = JSON.parse(req.body.education || "[]");
+//             skills = JSON.parse(req.body.skills || "[]");
+//         } catch (jsonErr) {
+//             return res.status(400).json({ error: true, message: "Invalid JSON in experience, education, or skills." });
+//         }
+
+//         // Get the existing resume
+//         const existingResume = await resumeModel.findById(resumeId);
+//         if (!existingResume) {
+//             return res.status(404).json({ error: true, message: "Resume not found." });
+//         }
+
+//         // Permission check: non-managers can only edit their own resumes
+//         if (req.user.role !== 'manager' && existingResume.userId.toString() !== req.user.id) {
+//             return res.status(403).json({ error: true, message: "You can't edit this resume." });
+//         }
+
+//         // Prepare update data
+//         const updateData = {
+//             fullName,
+//             description,
+//             experience,
+//             education,
+//             skills,
+//             img: existingResume.img, // start with old image
+//         };
+
+//         // If new image is uploaded, replace it
+//         if (req.file && req.file.path) {
+//             updateData.img = req.file.path;
+//         }
+
+//         // Update the resume
+//         const updatedResume = await resumeModel.findByIdAndUpdate(resumeId, { $set: updateData }, { new: true });
+
+//         return res.status(200).json({
+//             error: false,
+//             message: "Resume updated successfully",
+//             resume: updatedResume,
+//         });
+//     } catch (error) {
+//         console.error("Error updating resume:", error);
+//         return res.status(500).json({
+//             error: true,
+//             message: "An error occurred while updating the resume",
+//             errorDetails: error.message,
+//         });
+//     }
+// });
+
 
 
 // get  resume !!!
