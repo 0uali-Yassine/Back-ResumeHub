@@ -46,45 +46,45 @@ app.get("/", (req, res) => {
 
 
 // create a new user
-// app.post("/create-account", async (req, res) => {
-//     try {
-//         const { fullName, email, password, role } = req.body;
+app.post("/create-account", async (req, res) => {
+    try {
+        const { fullName, email, password, role } = req.body;
 
 
-//         if (!fullName || !email || !password) {
-//             return res.status(400).json({ error: true, message: "All fields are required" });
-//         }
+        if (!fullName || !email || !password) {
+            return res.status(400).json({ error: true, message: "All fields are required" });
+        }
 
-//         const isUserExist = await userModel.findOne({ email });
-//         if (isUserExist) {
-//             return res.status(400).json({ error: true, message: "User already exists" });
-//         }
+        const isUserExist = await userModel.findOne({ email });
+        if (isUserExist) {
+            return res.status(400).json({ error: true, message: "User already exists" });
+        }
 
 
-//         const user = new userModel({ fullName, email, password, role });
-//         await user.save();
+        const user = new userModel({ fullName, email, password, role });
+        await user.save();
 
-//         // Generate JWT token
-//         const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
         
-//         res.cookie("token", token, {
-//             httpOnly: true,
-//             secure: true,
-//             sameSite: "Strict",
-//         });
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
+        });
 
-//         return res.status(201).json({
-//             error: false,
-//             user,
-//             token,
-//             message: "User created successfully",
-//         });
+        return res.status(201).json({
+            error: false,
+            user,
+            token,
+            message: "User created successfully",
+        });
 
-//     } catch (error) {
-//         console.error("Error creating user:", error); // Log the error
-//         return res.status(500).json({ error: true, message: "An error occurred while creating the user" });
-//     }
-// });
+    } catch (error) {
+        console.error("Error creating user:", error); // Log the error
+        return res.status(500).json({ error: true, message: "An error occurred while creating the user" });
+    }
+});
 // app.post("/add-resume", upload.single("image"), authenticateToken, async (req, res) => {
 //     try {
 //         const user = await userModel.findById(req.user.id);
