@@ -412,7 +412,7 @@ app.get("/get-user", authenticateToken, async (req, res) => {
             return res.status(404).json({ error: true, message: "User not found" });
         }
         return res.status(200).json({
-            error: false,
+          //  error: false,
             user,
         });
     } catch (error) {
