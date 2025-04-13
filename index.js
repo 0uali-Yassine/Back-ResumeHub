@@ -66,7 +66,7 @@ app.post("/create-account", async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-        
+
         res.cookie("token", token, {
             httpOnly: true,
             secure: true,
@@ -182,7 +182,7 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
             return res.status(403).json({ error: true, message: "Only employers can add resumes." });
         }
 
-        const { fullName, img, description, experience, education, skills } = req.body;
+        const { fullName, title, email, link, address, phone, languages, project, img, description, experience, education, skills } = req.body;
         const userId = req.user.id;
 
         if (!fullName || !description) {
@@ -197,6 +197,13 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
             education,
             skills,
             userId,
+            title,
+            email,
+            link,
+            address,
+            phone,
+            languages,
+            project
         });
 
         await resume.save();
@@ -219,8 +226,8 @@ app.post("/add-resume", authenticateToken, async (req, res) => {
 app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
     try {
         const { resumeId } = req.params;
-        const { fullName, img, description, experience, education, skills } = req.body;
-        
+        const { fullName, title, email, link, address, phone, languages, project, img, description, experience, education, skills } = req.body;
+
 
         if (!fullName || !description) {
             return res.status(400).json({ error: true, message: "All fields are required" });
@@ -234,6 +241,13 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
             experience,
             education,
             skills,
+            title, 
+            email, 
+            link, 
+            address, 
+            phone, 
+            languages, 
+            project
         };
 
         let resume;
@@ -246,9 +260,9 @@ app.put("/edit-resume/:resumeId", authenticateToken, async (req, res) => {
             if (!isUserResumeExist) {
                 return res.status(403).json({ error: true, message: "You can't edite this resume!" });
             }
-        } 
+        }
 
-        resume = await resumeModel.findByIdAndUpdate(resumeId,{ $set: updateData}, { new: true });
+        resume = await resumeModel.findByIdAndUpdate(resumeId, { $set: updateData }, { new: true });
 
 
         return res.status(200).json({
@@ -412,7 +426,7 @@ app.get("/get-user", authenticateToken, async (req, res) => {
             return res.status(404).json({ error: true, message: "User not found" });
         }
         return res.status(200).json({
-          //  error: false,
+            //  error: false,
             user,
         });
     } catch (error) {
@@ -442,6 +456,28 @@ app.get("/logout", authenticateToken, async (req, res) => {
         });
     }
 });
+
+// get resume Page!
+app.set('view engine',"ejs")
+
+app.get('/resume/:id', async (req,res)=>{
+    try {
+        const {id} = req.params;
+        console.log(id);
+        const resume = await resumeModel.find({ userId: id }); // Get resumes for the  user
+        if (!resume) {
+            return res.status(404).send("Resume not found");
+        }
+
+        // res.render('resume', { resume });
+        return res.status(200).json({resume});
+        // res.render('resume');
+    } catch (error) {
+        console.error("Error fetching resume:", error);
+        res.status(500).send("Server error");
+    }
+
+})
 
 
 app.listen(8000);

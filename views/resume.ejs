@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= resume.fullName %> - Resume</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background-color: #f2f2f2;
+        }
+        .resume-container {
+            background: white;
+            padding: 30px;
+            max-width: 800px;
+            margin: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-container">
+        <h1><%= resume.fullName %></h1>
+        <p><strong>Title:</strong> <%= resume.title %></p>
+        <p><strong>Email:</strong> <%= resume.email %></p>
+        <p><strong>Phone:</strong> <%= resume.phone %></p>
+        <p><strong>Address:</strong> <%= resume.address %></p>
+        <p><strong>Languages:</strong> <%= resume.languages %></p>
+        <p><strong>Project:</strong> <%= resume.project %></p>
+        <p><strong>Description:</strong> <%= resume.description %></p>
+
+        <div class="section">
+            <h3>Experience</h3>
+            <ul>
+                <% resume.experience?.forEach(item => { %>
+                    <li><%= item %></li>
+                <% }) %>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Education</h3>
+            <ul>
+                <% resume.education?.forEach(item => { %>
+                    <li><%= item %></li>
+                <% }) %>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>Skills</h3>
+            <ul>
+                <% resume.skills?.forEach(item => { %>
+                    <li><%= item %></li>
+                <% }) %>
+            </ul>
+        </div>
+
+        <% if (resume.img) { %>
+            <div class="section">
+                <h3>Image</h3>
+                <img src="<%= resume.img %>" alt="Resume Image" style="max-width: 100%;">
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>
